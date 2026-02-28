@@ -12,6 +12,10 @@ type PersistenceStore interface {
 	// LoadRecords 加载指定时间范围内的记录
 	LoadRecords(since time.Time, apiType string) ([]PersistentRecord, error)
 
+	// LoadLatestTimestamps 从全量历史记录中查询每个 key 的最后成功/失败时间
+	// 用于启动时补全超出 24h 窗口的时间戳
+	LoadLatestTimestamps(apiType string) (map[string]*KeyLatestTimestamps, error)
+
 	// CleanupOldRecords 清理过期数据
 	CleanupOldRecords(before time.Time) (int64, error)
 
@@ -21,6 +25,14 @@ type PersistenceStore interface {
 
 	// Close 关闭存储（会先刷新缓冲区）
 	Close() error
+}
+
+// KeyLatestTimestamps 每个 key 的最后成功/失败时间
+type KeyLatestTimestamps struct {
+	BaseURL       string
+	KeyMask       string
+	LastSuccessAt *time.Time
+	LastFailureAt *time.Time
 }
 
 // PersistentRecord 持久化记录结构

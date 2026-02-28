@@ -294,6 +294,51 @@ func (s *SQLiteStore) LoadRecords(since time.Time, apiType string) ([]Persistent
 	return records, rows.Err()
 }
 
+// LoadLatestTimestamps 从全量历史记录中查询每个 key 的最后成功/失败时间
+func (s *SQLiteStore) LoadLatestTimestamps(apiType string) (map[string]*KeyLatestTimestamps, error) {
+	rows, err := s.db.Query(`
+		SELECT
+			metrics_key,
+			base_url,
+			key_mask,
+			MAX(CASE WHEN success = 1 THEN timestamp END) AS last_success,
+			MAX(CASE WHEN success = 0 THEN timestamp END) AS last_failure
+		FROM request_records
+		WHERE api_type = ?
+		GROUP BY metrics_key
+	`, apiType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make(map[string]*KeyLatestTimestamps)
+	for rows.Next() {
+		var metricsKey, baseURL, keyMask string
+		var lastSuccessTS, lastFailureTS sql.NullInt64
+
+		if err := rows.Scan(&metricsKey, &baseURL, &keyMask, &lastSuccessTS, &lastFailureTS); err != nil {
+			return nil, err
+		}
+
+		kt := &KeyLatestTimestamps{
+			BaseURL: baseURL,
+			KeyMask: keyMask,
+		}
+		if lastSuccessTS.Valid {
+			t := time.Unix(lastSuccessTS.Int64, 0)
+			kt.LastSuccessAt = &t
+		}
+		if lastFailureTS.Valid {
+			t := time.Unix(lastFailureTS.Int64, 0)
+			kt.LastFailureAt = &t
+		}
+		result[metricsKey] = kt
+	}
+
+	return result, rows.Err()
+}
+
 // CleanupOldRecords 清理过期数据
 func (s *SQLiteStore) CleanupOldRecords(before time.Time) (int64, error) {
 	result, err := s.db.Exec(

@@ -1,3 +1,12 @@
+## [Unreleased]
+
+### 修复
+
+- **渠道最后成功/失败时间戳持久化** - 修复渠道超过 24 小时无请求后重启时"最后成功"/"最后失败"时间戳丢失的问题
+  - `persistence.go`：新增 `KeyLatestTimestamps` 结构体，`PersistenceStore` 接口增加 `LoadLatestTimestamps(apiType)` 方法
+  - `sqlite_store.go`：实现 `LoadLatestTimestamps`，用单条 `GROUP BY + MAX(CASE WHEN)` SQL 从全量历史记录中查出每个 key 的最后成功/失败时间
+  - `channel_metrics.go`：`loadFromStore` 末尾调用 `loadHistoricalTimestamps()` 补全超出 24h 窗口的时间戳；修复 24h 内无任何记录时提前返回导致历史时间戳不被加载的 bug；对 24h 内无记录但历史有请求的渠道创建空壳 `KeyMetrics` 携带时间戳（`RequestCount=0`，不影响统计）
+
 ## [v2.6.18] - 2026-02-26
 
 ### 移除

@@ -170,6 +170,10 @@ func (m *MetricsManager) loadFromStore() error {
 
 	if len(records) == 0 {
 		log.Printf("[Metrics-Load] [%s] 无历史指标数据需要加载", m.apiType)
+		// 即使 24h 内无记录，也需要加载历史时间戳（补全超出窗口的最后成功/失败时间）
+		m.mu.Lock()
+		defer m.mu.Unlock()
+		m.loadHistoricalTimestamps()
 		return nil
 	}
 
@@ -231,9 +235,36 @@ func (m *MetricsManager) loadFromStore() error {
 		}
 	}
 
+	// 加载全量历史时间戳，补全超出 24h 窗口的 LastSuccessAt/LastFailureAt
+	m.loadHistoricalTimestamps()
+
 	log.Printf("[Metrics-Load] [%s] 已从持久化存储加载 %d 条历史记录，重建 %d 个 Key 指标",
 		m.apiType, len(records), len(m.keyMetrics))
 	return nil
+}
+
+// loadHistoricalTimestamps 加载全量历史时间戳，补全超出 24h 窗口的 LastSuccessAt/LastFailureAt。
+// 调用前必须已持有 m.mu.Lock()。
+func (m *MetricsManager) loadHistoricalTimestamps() {
+	timestamps, err := m.store.LoadLatestTimestamps(m.apiType)
+	if err != nil {
+		log.Printf("[Metrics-Load] 警告: [%s] 加载历史时间戳失败: %v", m.apiType, err)
+		return
+	}
+	for metricsKey, kt := range timestamps {
+		existing, ok := m.keyMetrics[metricsKey]
+		if !ok {
+			// 24h 内无记录但历史有请求：创建空壳，只携带时间戳
+			existing = m.getOrCreateKeyLocked(kt.BaseURL, metricsKey, kt.KeyMask)
+		}
+		// 只在持久化值更新时覆盖（防回退）
+		if kt.LastSuccessAt != nil && (existing.LastSuccessAt == nil || kt.LastSuccessAt.After(*existing.LastSuccessAt)) {
+			existing.LastSuccessAt = kt.LastSuccessAt
+		}
+		if kt.LastFailureAt != nil && (existing.LastFailureAt == nil || kt.LastFailureAt.After(*existing.LastFailureAt)) {
+			existing.LastFailureAt = kt.LastFailureAt
+		}
+	}
 }
 
 // getOrCreateKeyLocked 获取或创建 Key 指标（用于加载时，已知 metricsKey 和 keyMask）
