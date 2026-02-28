@@ -281,7 +281,7 @@
                 label="支持的模型 (可选)"
                 placeholder="输入模型名称后按回车添加，如 gpt-4o、claude-*"
                 prepend-inner-icon="mdi-brain"
-                hint="留空表示支持所有模型。支持通配符，如 gpt-4* 匹配 gpt-4o、gpt-4-turbo 等"
+                hint="匹配客户端请求的原始模型名（模型重定向发生在渠道选中之后）。留空表示支持所有模型。支持通配符，如 gpt-4* 匹配 gpt-4o、gpt-4-turbo 等"
                 persistent-hint
                 clearable
                 multiple
