@@ -20,8 +20,11 @@ func TestGetRecentActivityMultiURL_EmptyInputs(t *testing.T) {
 	if result.ChannelIndex != 0 {
 		t.Errorf("expected channelIndex 0, got %d", result.ChannelIndex)
 	}
-	if len(result.Segments) != 150 {
-		t.Errorf("expected 150 segments, got %d", len(result.Segments))
+	if result.TotalSegs != 150 {
+		t.Errorf("expected TotalSegs 150, got %d", result.TotalSegs)
+	}
+	if len(result.Segments) != 0 {
+		t.Errorf("expected empty segments map for empty input, got %d entries", len(result.Segments))
 	}
 	if result.RPM != 0 || result.TPM != 0 {
 		t.Errorf("expected RPM=0, TPM=0 for empty input")
@@ -29,8 +32,8 @@ func TestGetRecentActivityMultiURL_EmptyInputs(t *testing.T) {
 
 	// 空 activeKeys
 	result = m.GetRecentActivityMultiURL(0, []string{"http://example.com"}, []string{})
-	if len(result.Segments) != 150 {
-		t.Errorf("expected 150 segments, got %d", len(result.Segments))
+	if result.TotalSegs != 150 {
+		t.Errorf("expected TotalSegs 150, got %d", result.TotalSegs)
 	}
 }
 
@@ -86,9 +89,9 @@ func TestGetRecentActivityMultiURL_SegmentBoundaries(t *testing.T) {
 		t.Errorf("expected channelIndex 1, got %d", result.ChannelIndex)
 	}
 
-	// 验证 segment 数量（150 段，每段 6 秒）
-	if len(result.Segments) != 150 {
-		t.Errorf("expected 150 segments, got %d", len(result.Segments))
+	// 验证 TotalSegs（固定 150 段）
+	if result.TotalSegs != 150 {
+		t.Errorf("expected TotalSegs 150, got %d", result.TotalSegs)
 	}
 
 	// 验证总请求数（应该是 3，排除 16 分钟前的）
@@ -134,11 +137,16 @@ func TestGetRecentActivityMultiURL_FailureCount(t *testing.T) {
 
 	result := m.GetRecentActivityMultiURL(0, []string{baseURL}, []string{apiKey})
 
-	// 找到有数据的 segment
+	// 稀疏 Map 格式：只有有数据的段才会存在
+	if len(result.Segments) == 0 {
+		t.Fatal("expected to find at least one segment with data")
+	}
+
+	// 找到有数据的 segment（稀疏 Map 中直接遍历）
 	var foundSeg *ActivitySegment
-	for i := range result.Segments {
-		if result.Segments[i].RequestCount > 0 {
-			foundSeg = &result.Segments[i]
+	for _, seg := range result.Segments {
+		if seg.RequestCount > 0 {
+			foundSeg = seg
 			break
 		}
 	}

@@ -2,6 +2,12 @@
 
 ### 优化
 
+- **Dashboard 接口响应体积优化** - 针对 `/api/messages/channels/dashboard` 每 2 秒刷新时大量 0 值内容的问题进行优化
+  - 后端：`ChannelRecentActivity.Segments` 改为稀疏 Map 格式 (`map[int]*ActivitySegment`)，只返回有请求的段，无请求时返回空 map 而非 150 个空对象
+  - 后端：`ActivitySegment`、`MetricsResponse`、`KeyMetricsResponse`、`TimeWindowStats` 结构体添加 `omitempty` 标签，0 值字段不再输出到 JSON
+  - 前端：新增 `expandSparseSegments()` 辅助函数，自动将稀疏 Map 展开为完整数组，兼容旧版数组格式
+  - 效果：无请求时单个渠道的 `recentActivity` 响应体积从 ~7KB 减少到 ~50 bytes
+
 - **移动端加载性能优化** - 针对手机端打开慢的问题进行多维度优化
   - 后端：新增 Gzip 中间件 (`backend-go/internal/middleware/gzip.go`)，采用白名单模式仅压缩静态资源（`/assets/`、`.js`、`.css` 等），避免意外压缩未来新增的流式端点
   - 前端：Vuetify 组件按需导入，首屏 JS 从 1,374 KB 降至 506 KB (-63%)

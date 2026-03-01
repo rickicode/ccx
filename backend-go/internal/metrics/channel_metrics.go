@@ -61,10 +61,12 @@ type ChannelMetrics struct {
 }
 
 // TimeWindowStats 分时段统计
+// 使用 omitempty 减少 JSON 体积，0 值字段不输出
+// 注意：successRate 不使用 omitempty，因为 0% 是有意义的值（全失败）
 type TimeWindowStats struct {
-	RequestCount int64   `json:"requestCount"`
-	SuccessCount int64   `json:"successCount"`
-	FailureCount int64   `json:"failureCount"`
+	RequestCount int64   `json:"requestCount,omitempty"`
+	SuccessCount int64   `json:"successCount,omitempty"`
+	FailureCount int64   `json:"failureCount,omitempty"`
 	SuccessRate  float64 `json:"successRate"`
 	// Token 统计（按时间窗口聚合）
 	InputTokens         int64 `json:"inputTokens,omitempty"`
@@ -1398,16 +1400,18 @@ func (m *MetricsManager) GetWindowSize() int {
 // ============ 兼容旧 API 的方法（基于 channelIndex，需要调用方提供 baseURL 和 keys）============
 
 // MetricsResponse API 响应结构
+// 使用 omitempty 减少 JSON 体积，0 值字段不输出
+// 注意：successRate/errorRate 不使用 omitempty，因为 0% 是有意义的值
 type MetricsResponse struct {
 	ChannelIndex        int                        `json:"channelIndex"`
-	RequestCount        int64                      `json:"requestCount"`
-	SuccessCount        int64                      `json:"successCount"`
-	FailureCount        int64                      `json:"failureCount"`
+	RequestCount        int64                      `json:"requestCount,omitempty"`
+	SuccessCount        int64                      `json:"successCount,omitempty"`
+	FailureCount        int64                      `json:"failureCount,omitempty"`
 	SuccessRate         float64                    `json:"successRate"`
 	ErrorRate           float64                    `json:"errorRate"`
-	ConsecutiveFailures int64                      `json:"consecutiveFailures"`
-	ActiveRequests      int64                      `json:"activeRequests"` // 进行中请求数
-	Latency             int64                      `json:"latency"`
+	ConsecutiveFailures int64                      `json:"consecutiveFailures,omitempty"`
+	ActiveRequests      int64                      `json:"activeRequests,omitempty"` // 进行中请求数
+	Latency             int64                      `json:"latency,omitempty"`
 	LastSuccessAt       *string                    `json:"lastSuccessAt,omitempty"`
 	LastFailureAt       *string                    `json:"lastFailureAt,omitempty"`
 	CircuitBrokenAt     *string                    `json:"circuitBrokenAt,omitempty"`
@@ -1416,14 +1420,16 @@ type MetricsResponse struct {
 }
 
 // KeyMetricsResponse 单个 Key 的 API 响应
+// 使用 omitempty 减少 JSON 体积，0 值字段不输出
+// 注意：successRate 不使用 omitempty，因为 0% 是有意义的值
 type KeyMetricsResponse struct {
 	KeyMask             string  `json:"keyMask"`
-	RequestCount        int64   `json:"requestCount"`
-	SuccessCount        int64   `json:"successCount"`
-	FailureCount        int64   `json:"failureCount"`
+	RequestCount        int64   `json:"requestCount,omitempty"`
+	SuccessCount        int64   `json:"successCount,omitempty"`
+	FailureCount        int64   `json:"failureCount,omitempty"`
 	SuccessRate         float64 `json:"successRate"`
-	ConsecutiveFailures int64   `json:"consecutiveFailures"`
-	CircuitBroken       bool    `json:"circuitBroken"`
+	ConsecutiveFailures int64   `json:"consecutiveFailures,omitempty"`
+	CircuitBroken       bool    `json:"circuitBroken,omitempty"`
 }
 
 // ToResponseMultiURL 转换为 API 响应格式（支持多 BaseURL 聚合）
@@ -2653,20 +2659,23 @@ func CalculateTodayDuration() time.Duration {
 // ============ 渠道实时活跃度数据（用于渐变背景显示）============
 
 // ActivitySegment 活跃度分段数据（每 6 秒一段）
+// 使用 omitempty 减少 JSON 体积，0 值字段不输出
 type ActivitySegment struct {
-	RequestCount int64 `json:"requestCount"`
-	SuccessCount int64 `json:"successCount"`
-	FailureCount int64 `json:"failureCount"`
-	InputTokens  int64 `json:"inputTokens"`
-	OutputTokens int64 `json:"outputTokens"`
+	RequestCount int64 `json:"requestCount,omitempty"`
+	SuccessCount int64 `json:"successCount,omitempty"`
+	FailureCount int64 `json:"failureCount,omitempty"`
+	InputTokens  int64 `json:"inputTokens,omitempty"`
+	OutputTokens int64 `json:"outputTokens,omitempty"`
 }
 
 // ChannelRecentActivity 渠道最近活跃度数据
+// 使用稀疏 Map 格式存储 segments，只返回有数据的段
 type ChannelRecentActivity struct {
-	ChannelIndex int               `json:"channelIndex"`
-	Segments     []ActivitySegment `json:"segments"` // 150 段，每段 6 秒，从旧到新（共 15 分钟）
-	RPM          float64           `json:"rpm"`      // 15分钟平均 RPM
-	TPM          float64           `json:"tpm"`      // 15分钟平均 TPM
+	ChannelIndex int                      `json:"channelIndex"`
+	Segments     map[int]*ActivitySegment `json:"segments,omitempty"` // 稀疏表示：key=段索引(0-149)，只包含有请求的段
+	TotalSegs    int                      `json:"totalSegs"`          // 总段数（固定 150），前端用于展开稀疏数组
+	RPM          float64                  `json:"rpm,omitempty"`      // 15分钟平均 RPM
+	TPM          float64                  `json:"tpm,omitempty"`      // 15分钟平均 TPM
 }
 
 // GetRecentActivityMultiURL 获取渠道最近活跃度数据（支持多 URL 和多 Key 聚合）
@@ -2676,7 +2685,7 @@ type ChannelRecentActivity struct {
 //   - activeKeys: 渠道的所有活跃 API Key（支持多个）
 //
 // 返回：
-//   - 150 段活跃度数据（每段 6 秒，共 15 分钟）
+//   - 稀疏 Map 格式的活跃度数据（只包含有请求的段，减少 JSON 体积）
 //   - 自动聚合所有 URL × Key 组合的请求数据
 //   - RPM/TPM 为 15 分钟平均值
 func (m *MetricsManager) GetRecentActivityMultiURL(channelIndex int, baseURLs []string, activeKeys []string) *ChannelRecentActivity {
@@ -2687,9 +2696,7 @@ func (m *MetricsManager) GetRecentActivityMultiURL(channelIndex int, baseURLs []
 	if len(baseURLs) == 0 || len(activeKeys) == 0 {
 		return &ChannelRecentActivity{
 			ChannelIndex: channelIndex,
-			Segments:     make([]ActivitySegment, numSegments),
-			RPM:          0,
-			TPM:          0,
+			TotalSegs:    numSegments,
 		}
 	}
 
@@ -2707,8 +2714,8 @@ func (m *MetricsManager) GetRecentActivityMultiURL(channelIndex int, baseURLs []
 	endTime := time.Unix(alignedEndUnix, 0)
 	startTime := endTime.Add(-time.Duration(numSegments) * segmentDuration)
 
-	// 初始化分段数据
-	segments := make([]ActivitySegment, numSegments)
+	// 使用稀疏 Map 存储有数据的分段
+	sparseSegments := make(map[int]*ActivitySegment)
 
 	// 汇总统计
 	var totalRequests, totalInputTokens, totalOutputTokens int64
@@ -2735,7 +2742,13 @@ func (m *MetricsManager) GetRecentActivityMultiURL(channelIndex int, baseURLs []
 					continue
 				}
 
-				seg := &segments[offset]
+				// 按需创建稀疏 segment
+				seg, exists := sparseSegments[offset]
+				if !exists {
+					seg = &ActivitySegment{}
+					sparseSegments[offset] = seg
+				}
+
 				seg.RequestCount++
 				if record.Success {
 					seg.SuccessCount++
@@ -2761,7 +2774,8 @@ func (m *MetricsManager) GetRecentActivityMultiURL(channelIndex int, baseURLs []
 
 	return &ChannelRecentActivity{
 		ChannelIndex: channelIndex,
-		Segments:     segments,
+		Segments:     sparseSegments,
+		TotalSegs:    numSegments,
 		RPM:          rpm,
 		TPM:          tpm,
 	}

@@ -502,7 +502,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import draggable from 'vuedraggable'
-import { api, type Channel, type ChannelMetrics, type ChannelStatus, type TimeWindowStats, type ChannelRecentActivity } from '../services/api'
+import { api, type Channel, type ChannelMetrics, type ChannelStatus, type TimeWindowStats, type ChannelRecentActivity, expandSparseSegments } from '../services/api'
 import ChannelStatusBadge from './ChannelStatusBadge.vue'
 // 异步加载图表组件，减少首屏 JS 体积
 const KeyTrendChart = defineAsyncComponent(() => import('./KeyTrendChart.vue'))
@@ -860,9 +860,11 @@ watch(activityMap, (newMap) => {
   const now = Date.now()
 
   for (const [channelIndex, activity] of newMap.entries()) {
-    if (!activity.segments || activity.segments.length === 0) continue
+    // 展开稀疏 segments 为数组
+    const segments = expandSparseSegments(activity)
+    if (segments.length === 0) continue
 
-    const currentMax = Math.max(...activity.segments.map(s => s.requestCount), 0)
+    const currentMax = Math.max(...segments.map(s => s.requestCount), 0)
     const record = maxRequestsHistory.value.get(channelIndex)
 
     if (!record) {
@@ -899,13 +901,19 @@ const activityBarsCache = computed(() => {
   const _ = activityUpdateTick.value
 
   for (const [channelIndex, activity] of activityMap.value.entries()) {
-    if (!activity || !activity.segments || activity.segments.length === 0) {
+    if (!activity) {
       cache.set(channelIndex, [])
       continue
     }
 
-    const segments = activity.segments
+    // 展开稀疏 segments 为数组
+    const segments = expandSparseSegments(activity)
     const numSegments = segments.length  // 150（后端已聚合为每 6 秒一段）
+
+    if (numSegments === 0) {
+      cache.set(channelIndex, [])
+      continue
+    }
 
     // 每个段一个柱子
     const barWidth = 150 / numSegments
@@ -977,14 +985,17 @@ const getActivityBars = (channelIndex: number): Array<{ x: number; y: number; wi
 // 生成平滑曲线路径（使用移动平均 + Catmull-Rom 样条）
 const getActivityPath = (channelIndex: number): string => {
   const activity = getChannelActivity(channelIndex)
-  if (!activity || !activity.segments || activity.segments.length === 0) return ''
+  if (!activity) return ''
 
   // 使用 activityUpdateTick 触发响应式更新
-   
+
   const _ = activityUpdateTick.value
 
-  const segments = activity.segments
+  // 展开稀疏 segments 为数组
+  const segments = expandSparseSegments(activity)
   const numSegments = segments.length  // 150（后端已聚合为每 6 秒一段）
+
+  if (numSegments === 0) return ''
 
   // 找到最大请求数用于归一化
   const maxRequests = Math.max(...segments.map(s => s.requestCount), 1)
@@ -1055,9 +1066,13 @@ const _getActivityAreaPath = (channelIndex: number): string => {
   if (!linePath) return ''
 
   const activity = getChannelActivity(channelIndex)
-  if (!activity || !activity.segments) return ''
+  if (!activity) return ''
 
-  const numSegments = activity.segments.length
+  // 展开稀疏 segments 为数组
+  const segments = expandSparseSegments(activity)
+  const numSegments = segments.length
+
+  if (numSegments === 0) return ''
 
   // 在曲线路径后添加闭合到底部
   return `${linePath} L ${numSegments - 1} 100 L 0 100 Z`
@@ -1066,25 +1081,30 @@ const _getActivityAreaPath = (channelIndex: number): string => {
 // 获取渠道的活跃度渐变背景（已废弃，改用 SVG 曲线）
 const _getActivityGradient = (channelIndex: number): string => {
   const activity = getChannelActivity(channelIndex)
-  if (!activity || !activity.segments || activity.segments.length === 0) return 'transparent'
+  if (!activity) return 'transparent'
+
+  // 展开稀疏 segments 为数组
+  const segments = expandSparseSegments(activity)
+  const numSegments = segments.length
+
+  if (numSegments === 0) return 'transparent'
 
   // 检查是否有任何活动
-  const hasActivity = activity.segments.some(seg => seg.requestCount > 0)
+  const hasActivity = segments.some(seg => seg.requestCount > 0)
   if (!hasActivity) return 'transparent'
 
   // 使用 activityUpdateTick 触发响应式更新
-   
+
   const _ = activityUpdateTick.value
 
   // 后端返回 150 段（每段 6 秒）
   // 直接使用原始数据，不做加权平均，确保用户调用 API 后立即看到反馈
-  const numSegments = activity.segments.length  // 150
 
   // 生成每个 6 秒段的颜色（基于原始请求数）
   const segmentColors: string[] = []
 
   for (let i = 0; i < numSegments; i++) {
-    const seg = activity.segments[i]
+    const seg = segments[i]
 
     // 无请求则透明
     if (seg.requestCount === 0) {
@@ -1129,7 +1149,7 @@ const _getActivityGradient = (channelIndex: number): string => {
 // 格式化 RPM 显示
 const formatRPM = (channelIndex: number): string => {
   const activity = getChannelActivity(channelIndex)
-  if (!activity || activity.rpm === 0) return '--'
+  if (!activity || !activity.rpm) return '--'
   if (activity.rpm >= 10) return activity.rpm.toFixed(0)
   return activity.rpm.toFixed(1)
 }
@@ -1137,7 +1157,7 @@ const formatRPM = (channelIndex: number): string => {
 // 格式化 TPM 显示
 const formatTPM = (channelIndex: number): string => {
   const activity = getChannelActivity(channelIndex)
-  if (!activity || activity.tpm === 0) return '--'
+  if (!activity || !activity.tpm) return '--'
   if (activity.tpm >= 1000000) return `${(activity.tpm / 1000000).toFixed(1)}M`
   if (activity.tpm >= 1000) return `${(activity.tpm / 1000).toFixed(1)}K`
   return activity.tpm.toFixed(0)

@@ -264,12 +264,42 @@ export interface ActivitySegment {
   outputTokens: number
 }
 
-// 渠道最近活跃度数据
+// 渠道最近活跃度数据（稀疏格式，减少 JSON 体积）
 export interface ChannelRecentActivity {
   channelIndex: number
-  segments: ActivitySegment[]  // 150 段，每段 6 秒，从旧到新（共 15 分钟）
-  rpm: number                  // 15分钟平均 RPM
-  tpm: number                  // 15分钟平均 TPM
+  segments: Record<number, ActivitySegment> | ActivitySegment[]  // 稀疏 Map 或数组格式（兼容旧版）
+  totalSegs: number                                               // 总段数（固定 150）
+  rpm: number                                                     // 15分钟平均 RPM
+  tpm: number                                                     // 15分钟平均 TPM
+}
+
+// 辅助函数：将稀疏 segments 展开为完整数组
+export function expandSparseSegments(activity: ChannelRecentActivity): ActivitySegment[] {
+  const totalSegs = activity.totalSegs || 150
+  const result: ActivitySegment[] = new Array(totalSegs).fill(null).map(() => ({
+    requestCount: 0,
+    successCount: 0,
+    failureCount: 0,
+    inputTokens: 0,
+    outputTokens: 0
+  }))
+
+  // 兼容旧版数组格式
+  if (Array.isArray(activity.segments)) {
+    return activity.segments
+  }
+
+  // 稀疏 Map 格式：展开到完整数组
+  if (activity.segments && typeof activity.segments === 'object') {
+    for (const [indexStr, seg] of Object.entries(activity.segments)) {
+      const index = parseInt(indexStr, 10)
+      if (index >= 0 && index < totalSegs && seg) {
+        result[index] = seg
+      }
+    }
+  }
+
+  return result
 }
 
 // ============== 上游模型列表类型 ==============
