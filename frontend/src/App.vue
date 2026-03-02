@@ -27,11 +27,11 @@
           <v-form @submit.prevent="handleAuthSubmit">
             <v-text-field
               v-model="authStore.authKeyInput"
-              label="访问密钥 (PROXY_ACCESS_KEY)"
+              label="管理访问密钥"
               type="password"
               variant="outlined"
               prepend-inner-icon="mdi-key"
-              :rules="[v => !!v || '请输入访问密钥']"
+              :rules="[v => !!v || '请输入管理访问密钥']"
               required
               autofocus
               @keyup.enter="handleAuthSubmit"
@@ -44,11 +44,11 @@
 
           <v-divider class="my-4" />
 
-          <v-alert type="info" variant="tonal" density="compact" class="mb-0">
+          <v-alert type="info" variant="tonal" density="compact" class="mb-0" :icon="false">
             <div class="text-body-2">
               <p class="mb-2"><strong>🔒 安全提示：</strong></p>
               <ul class="ml-4 mb-0">
-                <li>访问密钥在服务器的 <code>PROXY_ACCESS_KEY</code> 环境变量中设置</li>
+                <li>管理界面使用 <code>ADMIN_ACCESS_KEY</code> 认证；未设置时回退到 <code>PROXY_ACCESS_KEY</code></li>
                 <li>密钥将安全保存在本地，下次访问将自动验证登录</li>
                 <li>请勿与他人分享您的访问密钥</li>
                 <li>如果怀疑密钥泄露，请立即更改服务器配置</li>
