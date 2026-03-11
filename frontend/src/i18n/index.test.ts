@@ -1,3 +1,6 @@
+// @ts-nocheck
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { createTranslator, normalizeLocale, resolveInitialLocale } from './index'
@@ -83,6 +86,40 @@ describe('messages', () => {
     for (const locale of Object.keys(messages) as Array<keyof typeof messages>) {
       for (const key of requiredKeys) {
         expect(messages[locale][key as keyof (typeof messages)[typeof locale]]).toBeTruthy()
+      }
+    }
+  })
+})
+
+describe('localized components', () => {
+  it('does not leave known hardcoded Chinese UI strings in migrated components', () => {
+    const checks = [
+      {
+        file: 'components/ChannelMetricsChart.vue',
+        forbidden: ['关闭', '请求数量', '获取历史数据失败', '收起']
+      },
+      {
+        file: 'components/ModelStatsChart.vue',
+        forbidden: ['>关闭<', '>今日<', '>请求<', '获取模型统计数据失败']
+      },
+      {
+        file: 'components/GlobalStatsChart.vue',
+        forbidden: ["seriesName: '输入 Token'", "seriesName: '输出 Token'", '获取全局统计数据失败', '合计: ${dp.requestCount} 请求']
+      },
+      {
+        file: 'components/KeyTrendChart.vue',
+        forbidden: ['获取 Key 历史数据失败', '合计: ${grandTotal} 请求', '失败 (${grandFailureRate}%)', '${Math.round(val)} 请求']
+      },
+      {
+        file: 'components/AddChannelModal.vue',
+        forbidden: ['label="源模型名"', 'label="目标模型名"', '跳过 TLS 证书验证</div>', '>          创建渠道', "'此字段为必填项'"]
+      }
+    ] as const
+
+    for (const check of checks) {
+      const content = readFileSync(resolve(__dirname, '..', check.file), 'utf8')
+      for (const text of check.forbidden) {
+        expect(content).not.toContain(text)
       }
     }
   })

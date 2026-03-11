@@ -1265,8 +1265,8 @@ const saveOrder = async () => {
     // 不调用 emit('refresh')，避免触发父组件刷新导致列表闪烁
   } catch (error) {
     console.error('Failed to save order:', error)
-    const errorMessage = error instanceof Error ? error.message : '未知错误'
-    emit('error', `保存渠道顺序失败: ${errorMessage}`)
+    const errorMessage = error instanceof Error ? error.message : t('addChannel.unknownError')
+    emit('error', t('toast.operationFailed', { message: errorMessage }))
     // 保存失败时重新初始化列表，恢复原始顺序
     initActiveChannels()
   } finally {
@@ -1311,8 +1311,8 @@ const setChannelStatus = async (channelId: number, status: ChannelStatus) => {
     emit('refresh')
   } catch (error) {
     console.error('Failed to set channel status:', error)
-    const errorMessage = error instanceof Error ? error.message : '未知错误'
-    emit('error', `设置渠道状态失败: ${errorMessage}`)
+    const errorMessage = error instanceof Error ? error.message : t('addChannel.unknownError')
+    emit('error', t('toast.operationFailed', { message: errorMessage }))
   }
 }
 
@@ -1369,11 +1369,11 @@ const setPromotion = async (channel: Channel) => {
     }
     emit('refresh')
     // 通知用户
-    emit('success', `渠道 ${channel.name} 已设为最高优先级，5分钟内优先使用`)
+    emit('success', t('orchestration.promotionSuccess', { name: channel.name }))
   } catch (error) {
     console.error('Failed to set promotion:', error)
-    const errorMessage = error instanceof Error ? error.message : '未知错误'
-    emit('error', `设置优先级失败: ${errorMessage}`)
+    const errorMessage = error instanceof Error ? error.message : t('addChannel.unknownError')
+    emit('error', t('toast.operationFailed', { message: errorMessage }))
   }
 }
 
@@ -1397,7 +1397,7 @@ const canDeleteChannel = (channel: Channel): boolean => {
 // 处理删除渠道
 const handleDeleteChannel = (channel: Channel) => {
   if (!canDeleteChannel(channel)) {
-    emit('error', '无法删除：故障转移序列中至少需要保留一个活跃渠道')
+    emit('error', t('orchestration.deleteActiveGuard'))
     return
   }
   emit('delete', channel.index)

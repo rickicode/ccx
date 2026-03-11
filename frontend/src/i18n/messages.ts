@@ -99,6 +99,8 @@ export type MessageKey =
   | 'orchestration.allActive'
   | 'orchestration.copied'
   | 'orchestration.copyFailed'
+  | 'orchestration.promotionSuccess'
+  | 'orchestration.deleteActiveGuard'
   | 'addChannel.editTitle'
   | 'addChannel.createTitle'
   | 'addChannel.editSubtitle'
@@ -130,6 +132,64 @@ export type MessageKey =
   | 'addChannel.oneClickSetup'
   | 'addChannel.modelHint'
   | 'addChannel.modelHintTip'
+  | 'addChannel.sourceModelLabel'
+  | 'addChannel.sourceModelPlaceholder'
+  | 'addChannel.targetModelLabel'
+  | 'addChannel.reasoningEffortLabel'
+  | 'addChannel.fastMode'
+  | 'addChannel.fastModeHint'
+  | 'addChannel.textVerbosityLabel'
+  | 'addChannel.supportedModelsLabel'
+  | 'addChannel.supportedModelsPlaceholder'
+  | 'addChannel.supportedModelsHint'
+  | 'addChannel.commonFilters'
+  | 'addChannel.apiKeyRequired'
+  | 'addChannel.apiKeyLoadBalance'
+  | 'addChannel.checking'
+  | 'addChannel.modelsCount'
+  | 'addChannel.duplicateKey'
+  | 'addChannel.deleteKey'
+  | 'addChannel.addNewApiKey'
+  | 'addChannel.addNewApiKeyPlaceholder'
+  | 'addChannel.descriptionLabel'
+  | 'addChannel.descriptionHint'
+  | 'addChannel.skipTlsLabel'
+  | 'addChannel.skipTlsHint'
+  | 'addChannel.lowQualityLabel'
+  | 'addChannel.lowQualityHint'
+  | 'addChannel.injectDummyThoughtSignatureLabel'
+  | 'addChannel.injectDummyThoughtSignatureHint'
+  | 'addChannel.stripThoughtSignatureLabel'
+  | 'addChannel.stripThoughtSignatureHint'
+  | 'addChannel.customHeadersLabel'
+  | 'addChannel.customHeadersHint'
+  | 'addChannel.headerNameLabel'
+  | 'addChannel.headerValueLabel'
+  | 'addChannel.proxyUrlLabel'
+  | 'addChannel.proxyUrlPlaceholder'
+  | 'addChannel.proxyUrlHint'
+  | 'addChannel.createChannel'
+  | 'addChannel.updateChannel'
+  | 'addChannel.modelMappingHintChat'
+  | 'addChannel.modelMappingHintGemini'
+  | 'addChannel.modelMappingHintResponses'
+  | 'addChannel.modelMappingHintMessages'
+  | 'addChannel.targetModelPlaceholderChat'
+  | 'addChannel.targetModelPlaceholderResponses'
+  | 'addChannel.targetModelPlaceholderGemini'
+  | 'addChannel.targetModelPlaceholderMessages'
+  | 'addChannel.reasoningDefault'
+  | 'addChannel.sourceModelNameTooLong'
+  | 'addChannel.sourceModelNoSpaces'
+  | 'addChannel.sourceModelInvalidChars'
+  | 'addChannel.fieldRequired'
+  | 'addChannel.invalidUrl'
+  | 'addChannel.atLeastOneUrl'
+  | 'addChannel.invalidUrlValue'
+  | 'addChannel.duplicateKeyExists'
+  | 'addChannel.fillBaseUrlAndApiKey'
+  | 'addChannel.allApiKeysModelsFailed'
+  | 'addChannel.unknownError'
   | 'channelCard.openWebsite'
   | 'channelCard.disabled'
   | 'channelCard.suspended'
@@ -173,6 +233,15 @@ export type MessageKey =
   | 'chart.success'
   | 'chart.input'
   | 'chart.output'
+  | 'chart.requestUnit'
+  | 'chart.failed'
+  | 'chart.total'
+  | 'chart.collapse'
+  | 'chart.noModelRequestsInRange'
+  | 'chart.historyLoadFailed'
+  | 'chart.modelStatsLoadFailed'
+  | 'chart.globalStatsLoadFailed'
+  | 'chart.keyHistoryLoadFailed'
   | 'chart.noRequestsInRange'
   | 'chart.noKeyUsageInRange'
   | 'status.active'
@@ -334,6 +403,8 @@ export const messages: Record<SupportedLocale, Record<MessageKey, string>> = {
     'orchestration.allActive': 'All channels are active',
     'orchestration.copied': 'Copied',
     'orchestration.copyFailed': 'Failed to copy channel config',
+    'orchestration.promotionSuccess': 'Channel {name} is now top priority and will be preferred for the next 5 minutes',
+    'orchestration.deleteActiveGuard': 'Cannot delete: keep at least one active channel in the failover sequence',
     'addChannel.editTitle': 'Edit channel',
     'addChannel.createTitle': 'Add new channel',
     'addChannel.editSubtitle': 'Modify channel configuration',
@@ -365,6 +436,64 @@ export const messages: Record<SupportedLocale, Record<MessageKey, string>> = {
     'addChannel.oneClickSetup': 'One-click setup',
     'addChannel.modelHint': 'Configure source model to target model mapping here.',
     'addChannel.modelHintTip': 'Click a target model field to load supported upstream models. Detection status for each API key appears in the key list.',
+    'addChannel.sourceModelLabel': 'Source model',
+    'addChannel.sourceModelPlaceholder': 'Select or enter a source model',
+    'addChannel.targetModelLabel': 'Target model',
+    'addChannel.reasoningEffortLabel': 'Reasoning effort',
+    'addChannel.fastMode': 'Fast mode',
+    'addChannel.fastModeHint': 'When enabled, requests send service_tier=priority.',
+    'addChannel.textVerbosityLabel': 'Output verbosity',
+    'addChannel.supportedModelsLabel': 'Supported models (optional)',
+    'addChannel.supportedModelsPlaceholder': 'Press Enter after each model name, for example gpt-4o or claude-*',
+    'addChannel.supportedModelsHint': 'Matches the original model requested by the client before model redirect is applied. Leave empty to allow all models. Wildcards such as gpt-4* are supported.',
+    'addChannel.commonFilters': 'Common filters',
+    'addChannel.apiKeyRequired': 'At least one key is required',
+    'addChannel.apiKeyLoadBalance': 'Multiple keys can be added for load balancing',
+    'addChannel.checking': 'Checking...',
+    'addChannel.modelsCount': 'models {statusCode} ({count})',
+    'addChannel.duplicateKey': 'Duplicate key',
+    'addChannel.deleteKey': 'Delete key',
+    'addChannel.addNewApiKey': 'Add a new API key',
+    'addChannel.addNewApiKeyPlaceholder': 'Enter the full API key',
+    'addChannel.descriptionLabel': 'Description (optional)',
+    'addChannel.descriptionHint': 'Optional channel description...',
+    'addChannel.skipTlsLabel': 'Skip TLS certificate verification',
+    'addChannel.skipTlsHint': 'Enable temporarily only for self-signed certificates or domain mismatch. Keep disabled in production.',
+    'addChannel.lowQualityLabel': 'Low-quality channel',
+    'addChannel.lowQualityHint': 'When enabled, token usage is force-estimated locally and the local value is used if the deviation exceeds 5%.',
+    'addChannel.injectDummyThoughtSignatureLabel': 'Inject dummy thought signature',
+    'addChannel.injectDummyThoughtSignatureHint': 'Injects a dummy signature into functionCall for third-party APIs that require this field. Disable it for the official API.',
+    'addChannel.stripThoughtSignatureLabel': 'Strip thought signature',
+    'addChannel.stripThoughtSignatureHint': 'Removes thought_signature from functionCall for older Gemini APIs that do not support it.',
+    'addChannel.customHeadersLabel': 'Custom headers (optional)',
+    'addChannel.customHeadersHint': 'Add or override HTTP headers sent to the upstream service.',
+    'addChannel.headerNameLabel': 'Header name',
+    'addChannel.headerValueLabel': 'Header value',
+    'addChannel.proxyUrlLabel': 'Proxy URL (optional)',
+    'addChannel.proxyUrlPlaceholder': 'http://127.0.0.1:7890 or socks5://127.0.0.1:1080',
+    'addChannel.proxyUrlHint': 'Supports HTTP/HTTPS/SOCKS5 proxy URLs for accessing upstream services through a proxy.',
+    'addChannel.createChannel': 'Create channel',
+    'addChannel.updateChannel': 'Update channel',
+    'addChannel.modelMappingHintChat': 'Configure model name mapping to redirect the requested model to a target model. Example: redirect "gpt-4o" to "gpt-5.4".',
+    'addChannel.modelMappingHintGemini': 'Configure model name mapping to redirect the requested model to a target model. Example: redirect "gemini-pro" to "gemini-3-pro".',
+    'addChannel.modelMappingHintResponses': 'Configure model name mapping to redirect the requested model to a target model. Example: redirect "opus" to "gpt-5.4".',
+    'addChannel.modelMappingHintMessages': 'Configure model name mapping to redirect the requested model to a target model. Example: redirect "opus" to "claude-sonnet-4-5-20250929".',
+    'addChannel.targetModelPlaceholderChat': 'Example: gpt-5.4',
+    'addChannel.targetModelPlaceholderResponses': 'Example: gpt-5.4',
+    'addChannel.targetModelPlaceholderGemini': 'Example: gemini-3.1-pro',
+    'addChannel.targetModelPlaceholderMessages': 'Example: claude-opus-4-6',
+    'addChannel.reasoningDefault': 'Unset (default)',
+    'addChannel.sourceModelNameTooLong': 'Custom model name is too long (max 50 characters)',
+    'addChannel.sourceModelNoSpaces': 'Model name cannot contain spaces',
+    'addChannel.sourceModelInvalidChars': 'Model name can only contain letters, numbers, hyphens, underscores, dots, slashes, colons, @, and +',
+    'addChannel.fieldRequired': 'This field is required',
+    'addChannel.invalidUrl': 'Please enter a valid URL',
+    'addChannel.atLeastOneUrl': 'Please enter at least one URL',
+    'addChannel.invalidUrlValue': 'Invalid URL: {url}',
+    'addChannel.duplicateKeyExists': 'This key already exists',
+    'addChannel.fillBaseUrlAndApiKey': 'Fill in Base URL and at least one API key first',
+    'addChannel.allApiKeysModelsFailed': 'No API key could load the model list. Check the error shown for each API key.',
+    'addChannel.unknownError': 'Unknown error',
     'channelCard.openWebsite': 'Open website',
     'channelCard.disabled': 'Disabled',
     'channelCard.suspended': 'Suspended',
@@ -408,6 +537,15 @@ export const messages: Record<SupportedLocale, Record<MessageKey, string>> = {
     'chart.success': 'success',
     'chart.input': 'input',
     'chart.output': 'output',
+    'chart.requestUnit': 'requests',
+    'chart.failed': 'failed',
+    'chart.total': 'Total',
+    'chart.collapse': 'Collapse',
+    'chart.noModelRequestsInRange': 'No model request records in the selected time range',
+    'chart.historyLoadFailed': 'Failed to load history data',
+    'chart.modelStatsLoadFailed': 'Failed to load model statistics',
+    'chart.globalStatsLoadFailed': 'Failed to load global statistics',
+    'chart.keyHistoryLoadFailed': 'Failed to load key history data',
     'chart.noRequestsInRange': 'No request records in the selected time range',
     'chart.noKeyUsageInRange': 'No key usage records in the selected time range',
     'status.active': 'Active',
@@ -568,6 +706,8 @@ export const messages: Record<SupportedLocale, Record<MessageKey, string>> = {
     'orchestration.allActive': 'Semua channel aktif',
     'orchestration.copied': 'Tersalin',
     'orchestration.copyFailed': 'Gagal menyalin konfigurasi channel',
+    'orchestration.promotionSuccess': 'Channel {name} menjadi prioritas tertinggi dan akan diprioritaskan selama 5 menit ke depan',
+    'orchestration.deleteActiveGuard': 'Tidak bisa dihapus: urutan failover harus menyisakan minimal satu channel aktif',
     'addChannel.editTitle': 'Edit channel',
     'addChannel.createTitle': 'Tambah channel baru',
     'addChannel.editSubtitle': 'Ubah konfigurasi channel',
@@ -599,6 +739,64 @@ export const messages: Record<SupportedLocale, Record<MessageKey, string>> = {
     'addChannel.oneClickSetup': 'Setup sekali klik',
     'addChannel.modelHint': 'Atur pemetaan model sumber ke model target di sini.',
     'addChannel.modelHintTip': 'Klik field model target untuk memuat model upstream yang didukung. Status deteksi tiap API key akan tampil di daftar key.',
+    'addChannel.sourceModelLabel': 'Model sumber',
+    'addChannel.sourceModelPlaceholder': 'Pilih atau masukkan model sumber',
+    'addChannel.targetModelLabel': 'Model target',
+    'addChannel.reasoningEffortLabel': 'Kedalaman reasoning',
+    'addChannel.fastMode': 'Mode cepat',
+    'addChannel.fastModeHint': 'Jika aktif, request akan mengirim service_tier=priority.',
+    'addChannel.textVerbosityLabel': 'Kepadatan output',
+    'addChannel.supportedModelsLabel': 'Model yang didukung (opsional)',
+    'addChannel.supportedModelsPlaceholder': 'Masukkan nama model lalu tekan Enter, misalnya gpt-4o atau claude-*',
+    'addChannel.supportedModelsHint': 'Mencocokkan nama model asli yang diminta client sebelum model redirect diterapkan. Kosong berarti semua model didukung. Wildcard seperti gpt-4* didukung.',
+    'addChannel.commonFilters': 'Filter umum',
+    'addChannel.apiKeyRequired': 'Minimal satu key diperlukan',
+    'addChannel.apiKeyLoadBalance': 'Beberapa key bisa ditambahkan untuk load balancing',
+    'addChannel.checking': 'Sedang memeriksa...',
+    'addChannel.modelsCount': 'models {statusCode} ({count})',
+    'addChannel.duplicateKey': 'Key duplikat',
+    'addChannel.deleteKey': 'Hapus key',
+    'addChannel.addNewApiKey': 'Tambah API key baru',
+    'addChannel.addNewApiKeyPlaceholder': 'Masukkan API key lengkap',
+    'addChannel.descriptionLabel': 'Deskripsi (opsional)',
+    'addChannel.descriptionHint': 'Deskripsi channel opsional...',
+    'addChannel.skipTlsLabel': 'Lewati verifikasi sertifikat TLS',
+    'addChannel.skipTlsHint': 'Aktifkan sementara hanya untuk sertifikat self-signed atau domain mismatch. Matikan di production.',
+    'addChannel.lowQualityLabel': 'Channel kualitas rendah',
+    'addChannel.lowQualityHint': 'Jika aktif, token akan diperkirakan secara lokal dan nilai lokal dipakai bila selisihnya lebih dari 5%.',
+    'addChannel.injectDummyThoughtSignatureLabel': 'Sisipkan dummy thought signature',
+    'addChannel.injectDummyThoughtSignatureHint': 'Menyisipkan dummy signature ke functionCall agar kompatibel dengan API pihak ketiga yang membutuhkan field ini. Matikan untuk API resmi.',
+    'addChannel.stripThoughtSignatureLabel': 'Hapus thought signature',
+    'addChannel.stripThoughtSignatureHint': 'Menghapus thought_signature dari functionCall untuk Gemini API lama yang belum mendukung field tersebut.',
+    'addChannel.customHeadersLabel': 'Custom header (opsional)',
+    'addChannel.customHeadersHint': 'Tambahkan atau timpa HTTP header yang dikirim ke upstream.',
+    'addChannel.headerNameLabel': 'Nama header',
+    'addChannel.headerValueLabel': 'Nilai header',
+    'addChannel.proxyUrlLabel': 'Proxy URL (opsional)',
+    'addChannel.proxyUrlPlaceholder': 'http://127.0.0.1:7890 atau socks5://127.0.0.1:1080',
+    'addChannel.proxyUrlHint': 'Mendukung proxy HTTP/HTTPS/SOCKS5 untuk mengakses layanan upstream lewat proxy.',
+    'addChannel.createChannel': 'Buat channel',
+    'addChannel.updateChannel': 'Perbarui channel',
+    'addChannel.modelMappingHintChat': 'Atur pemetaan nama model untuk mengarahkan model yang diminta ke model target. Contoh: arahkan "gpt-4o" ke "gpt-5.4".',
+    'addChannel.modelMappingHintGemini': 'Atur pemetaan nama model untuk mengarahkan model yang diminta ke model target. Contoh: arahkan "gemini-pro" ke "gemini-3-pro".',
+    'addChannel.modelMappingHintResponses': 'Atur pemetaan nama model untuk mengarahkan model yang diminta ke model target. Contoh: arahkan "opus" ke "gpt-5.4".',
+    'addChannel.modelMappingHintMessages': 'Atur pemetaan nama model untuk mengarahkan model yang diminta ke model target. Contoh: arahkan "opus" ke "claude-sonnet-4-5-20250929".',
+    'addChannel.targetModelPlaceholderChat': 'Contoh: gpt-5.4',
+    'addChannel.targetModelPlaceholderResponses': 'Contoh: gpt-5.4',
+    'addChannel.targetModelPlaceholderGemini': 'Contoh: gemini-3.1-pro',
+    'addChannel.targetModelPlaceholderMessages': 'Contoh: claude-opus-4-6',
+    'addChannel.reasoningDefault': 'Belum diatur (default)',
+    'addChannel.sourceModelNameTooLong': 'Nama model kustom terlalu panjang (maksimal 50 karakter)',
+    'addChannel.sourceModelNoSpaces': 'Nama model tidak boleh mengandung spasi',
+    'addChannel.sourceModelInvalidChars': 'Nama model hanya boleh berisi huruf, angka, tanda minus, underscore, titik, slash, titik dua, @, dan +',
+    'addChannel.fieldRequired': 'Field ini wajib diisi',
+    'addChannel.invalidUrl': 'Masukkan URL yang valid',
+    'addChannel.atLeastOneUrl': 'Masukkan minimal satu URL',
+    'addChannel.invalidUrlValue': 'URL tidak valid: {url}',
+    'addChannel.duplicateKeyExists': 'Key ini sudah ada',
+    'addChannel.fillBaseUrlAndApiKey': 'Isi Base URL dan minimal satu API key terlebih dahulu',
+    'addChannel.allApiKeysModelsFailed': 'Tidak ada API key yang bisa memuat daftar model. Periksa error pada masing-masing API key.',
+    'addChannel.unknownError': 'Error tidak diketahui',
     'channelCard.openWebsite': 'Buka situs',
     'channelCard.disabled': 'Nonaktif',
     'channelCard.suspended': 'Suspended',
@@ -642,6 +840,15 @@ export const messages: Record<SupportedLocale, Record<MessageKey, string>> = {
     'chart.success': 'sukses',
     'chart.input': 'input',
     'chart.output': 'output',
+    'chart.requestUnit': 'request',
+    'chart.failed': 'gagal',
+    'chart.total': 'Total',
+    'chart.collapse': 'Ciutkan',
+    'chart.noModelRequestsInRange': 'Tidak ada request model dalam rentang waktu yang dipilih',
+    'chart.historyLoadFailed': 'Gagal memuat data histori',
+    'chart.modelStatsLoadFailed': 'Gagal memuat statistik model',
+    'chart.globalStatsLoadFailed': 'Gagal memuat statistik global',
+    'chart.keyHistoryLoadFailed': 'Gagal memuat histori key',
     'chart.noRequestsInRange': 'Tidak ada request dalam rentang waktu yang dipilih',
     'chart.noKeyUsageInRange': 'Tidak ada penggunaan key dalam rentang waktu yang dipilih',
     'status.active': 'Aktif',
@@ -802,6 +1009,8 @@ export const messages: Record<SupportedLocale, Record<MessageKey, string>> = {
     'orchestration.allActive': '所有渠道都处于活跃状态',
     'orchestration.copied': '已复制',
     'orchestration.copyFailed': '复制渠道配置失败',
+    'orchestration.promotionSuccess': '渠道 {name} 已设为最高优先级，5分钟内优先使用',
+    'orchestration.deleteActiveGuard': '无法删除：故障转移序列中至少需要保留一个活跃渠道',
     'addChannel.editTitle': '编辑渠道',
     'addChannel.createTitle': '添加新渠道',
     'addChannel.editSubtitle': '修改渠道配置信息',
@@ -833,6 +1042,64 @@ export const messages: Record<SupportedLocale, Record<MessageKey, string>> = {
     'addChannel.oneClickSetup': '一键设置',
     'addChannel.modelHint': '在此配置源模型到目标模型的映射。',
     'addChannel.modelHintTip': '点击目标模型输入框会自动获取上游支持的模型列表,每个 API Key 的检测状态会显示在密钥列表中',
+    'addChannel.sourceModelLabel': '源模型名',
+    'addChannel.sourceModelPlaceholder': '选择或输入源模型名',
+    'addChannel.targetModelLabel': '目标模型名',
+    'addChannel.reasoningEffortLabel': '思考深度',
+    'addChannel.fastMode': 'Fast 模式',
+    'addChannel.fastModeHint': '开启后下发 service_tier=priority',
+    'addChannel.textVerbosityLabel': '输出冗长度',
+    'addChannel.supportedModelsLabel': '支持的模型 (可选)',
+    'addChannel.supportedModelsPlaceholder': '输入模型名称后按回车添加，如 gpt-4o、claude-*',
+    'addChannel.supportedModelsHint': '匹配客户端请求的原始模型名（模型重定向发生在渠道选中之后）。留空表示支持所有模型。支持通配符，如 gpt-4* 匹配 gpt-4o、gpt-4-turbo 等',
+    'addChannel.commonFilters': '常用过滤器',
+    'addChannel.apiKeyRequired': '至少需要一个密钥',
+    'addChannel.apiKeyLoadBalance': '可添加多个密钥用于负载均衡',
+    'addChannel.checking': '检测中...',
+    'addChannel.modelsCount': 'models {statusCode} ({count} 个)',
+    'addChannel.duplicateKey': '重复密钥',
+    'addChannel.deleteKey': '删除密钥',
+    'addChannel.addNewApiKey': '添加新的API密钥',
+    'addChannel.addNewApiKeyPlaceholder': '输入完整的API密钥',
+    'addChannel.descriptionLabel': '描述 (可选)',
+    'addChannel.descriptionHint': '可选的渠道描述...',
+    'addChannel.skipTlsLabel': '跳过 TLS 证书验证',
+    'addChannel.skipTlsHint': '仅在自签名或域名不匹配时临时启用，生产环境请关闭',
+    'addChannel.lowQualityLabel': '低质量渠道',
+    'addChannel.lowQualityHint': '启用后强制本地估算 token 数量，偏差超过 5% 时使用本地值',
+    'addChannel.injectDummyThoughtSignatureLabel': '注入 Dummy Thought Signature',
+    'addChannel.injectDummyThoughtSignatureHint': '为 functionCall 注入 dummy signature，兼容需要该字段的第三方 API（官方 API 请关闭）',
+    'addChannel.stripThoughtSignatureLabel': '移除 Thought Signature',
+    'addChannel.stripThoughtSignatureHint': '移除 functionCall 的 thought_signature 字段，兼容不支持该字段的旧版 Gemini API',
+    'addChannel.customHeadersLabel': '自定义请求头 (可选)',
+    'addChannel.customHeadersHint': '添加或覆盖发送到上游的 HTTP 请求头',
+    'addChannel.headerNameLabel': 'Header 名称',
+    'addChannel.headerValueLabel': 'Header 值',
+    'addChannel.proxyUrlLabel': '代理 URL (可选)',
+    'addChannel.proxyUrlPlaceholder': 'http://127.0.0.1:7890 或 socks5://127.0.0.1:1080',
+    'addChannel.proxyUrlHint': '支持 HTTP/HTTPS/SOCKS5 代理，用于通过代理访问上游服务',
+    'addChannel.createChannel': '创建渠道',
+    'addChannel.updateChannel': '更新渠道',
+    'addChannel.modelMappingHintChat': '配置模型名称映射，将请求中的模型名重定向到目标模型。例如：将 "gpt-4o" 重定向到 "gpt-5.4"',
+    'addChannel.modelMappingHintGemini': '配置模型名称映射，将请求中的模型名重定向到目标模型。例如：将 "gemini-pro" 重定向到 "gemini-3-pro"',
+    'addChannel.modelMappingHintResponses': '配置模型名称映射，将请求中的模型名重定向到目标模型。例如：将 "opus" 重定向到 "gpt-5.4"',
+    'addChannel.modelMappingHintMessages': '配置模型名称映射，将请求中的模型名重定向到目标模型。例如：将 "opus" 重定向到 "claude-sonnet-4-5-20250929"',
+    'addChannel.targetModelPlaceholderChat': '例如：gpt-5.4',
+    'addChannel.targetModelPlaceholderResponses': '例如：gpt-5.4',
+    'addChannel.targetModelPlaceholderGemini': '例如：gemini-3.1-pro',
+    'addChannel.targetModelPlaceholderMessages': '例如：claude-opus-4-6',
+    'addChannel.reasoningDefault': '未设置（默认）',
+    'addChannel.sourceModelNameTooLong': '自定义模型名过长（最多 50 字符）',
+    'addChannel.sourceModelNoSpaces': '模型名不能包含空格',
+    'addChannel.sourceModelInvalidChars': '模型名只能包含字母、数字、连字符、下划线、点、斜杠、冒号、@ 和 +',
+    'addChannel.fieldRequired': '此字段为必填项',
+    'addChannel.invalidUrl': '请输入有效的URL',
+    'addChannel.atLeastOneUrl': '请至少输入一个 URL',
+    'addChannel.invalidUrlValue': '无效的 URL: {url}',
+    'addChannel.duplicateKeyExists': '该密钥已存在',
+    'addChannel.fillBaseUrlAndApiKey': '请先填写 Base URL 和至少一个 API Key',
+    'addChannel.allApiKeysModelsFailed': '所有 API Key 都无法获取模型列表，请检查 API 密钥列表中的错误信息',
+    'addChannel.unknownError': '未知错误',
     'channelCard.openWebsite': '打开官网',
     'channelCard.disabled': '停用',
     'channelCard.suspended': '熔断',
@@ -876,6 +1143,15 @@ export const messages: Record<SupportedLocale, Record<MessageKey, string>> = {
     'chart.success': '成功',
     'chart.input': '输入',
     'chart.output': '输出',
+    'chart.requestUnit': '请求',
+    'chart.failed': '失败',
+    'chart.total': '合计',
+    'chart.collapse': '收起',
+    'chart.noModelRequestsInRange': '选定时间范围内没有模型请求记录',
+    'chart.historyLoadFailed': '获取历史数据失败',
+    'chart.modelStatsLoadFailed': '获取模型统计数据失败',
+    'chart.globalStatsLoadFailed': '获取全局统计数据失败',
+    'chart.keyHistoryLoadFailed': '获取 Key 历史数据失败',
     'chart.noRequestsInRange': '选定时间范围内没有请求记录',
     'chart.noKeyUsageInRange': '选定时间范围内没有 Key 使用记录',
     'status.active': '活跃',

@@ -535,7 +535,7 @@ const formatAxisValue = (val: number, mode: ViewMode): string => {
 const formatTooltipValue = (val: number, mode: ViewMode): string => {
   switch (mode) {
     case 'traffic':
-      return `${Math.round(val)} 请求`
+      return `${Math.round(val)} ${t('chart.requestUnit')}`
     case 'tokens':
     case 'cache':
       return formatNumber(Math.abs(val))
@@ -628,7 +628,7 @@ const buildTrafficTooltip = ({ seriesIndex, dataPointIndex, w }: any): string =>
     html += `<span style="flex: 1;">${stat.keyMask}</span>`
     html += `<span style="margin-left: 12px; font-weight: 500;">${stat.total}</span>`
     if (hasKeyFailure) {
-      html += `<span style="margin-left: 6px; color: #ef4444; font-size: 11px;">(${stat.failure}失败, ${failureRate}%)</span>`
+      html += `<span style="margin-left: 6px; color: #ef4444; font-size: 11px;">(${stat.failure} ${t('chart.failed')}, ${failureRate}%)</span>`
     }
     html += `</div>`
   })
@@ -636,9 +636,9 @@ const buildTrafficTooltip = ({ seriesIndex, dataPointIndex, w }: any): string =>
   // 汇总行（如果有多个 key）
   if (keyStats.length > 1) {
     html += `<div style="border-top: 1px solid rgba(128,128,128,0.3); margin-top: 6px; padding-top: 6px; font-weight: 600;">`
-    html += `<span>合计: ${grandTotal} 请求</span>`
+    html += `<span>${t('chart.total')}: ${grandTotal} ${t('chart.requestUnit')}</span>`
     if (hasFailure) {
-      html += `<span style="color: #ef4444; margin-left: 8px;">${grandFailure} 失败 (${grandFailureRate}%)</span>`
+      html += `<span style="color: #ef4444; margin-left: 8px;">${grandFailure} ${t('chart.failed')} (${grandFailureRate}%)</span>`
     }
     html += `</div>`
   }
@@ -747,7 +747,7 @@ const refreshData = async (isAutoRefresh = false) => {
     if (requestId !== refreshRequestId) return
 
     console.error('Failed to fetch key metrics history:', error)
-    errorMessage.value = error instanceof Error ? error.message : '获取 Key 历史数据失败'
+    errorMessage.value = error instanceof Error ? error.message : t('chart.keyHistoryLoadFailed')
     showError.value = true
     historyData.value = null
   } finally {

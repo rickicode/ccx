@@ -353,7 +353,7 @@ const chartOptions = computed<ApexOptions>(() => {
     },
     yaxis: mode === 'tokens' ? [
       {
-        seriesName: '输入 Token',
+        seriesName: t('chart.inputTokens'),
         labels: {
           formatter: (val: number) => formatNumber(val),
           style: { fontSize: '11px' }
@@ -361,7 +361,7 @@ const chartOptions = computed<ApexOptions>(() => {
         min: 0
       },
       {
-        seriesName: '输出 Token',
+        seriesName: t('chart.outputTokens'),
         opposite: true,
         labels: {
           formatter: (val: number) => formatNumber(val),
@@ -382,7 +382,7 @@ const chartOptions = computed<ApexOptions>(() => {
       },
       y: {
         formatter: (val: number) => mode === 'traffic'
-          ? `${Math.round(val)} 请求`
+          ? `${Math.round(val)} ${t('chart.requestUnit')}`
           : formatNumber(val)
       },
       custom: mode === 'traffic' ? buildTrafficTooltip : undefined
@@ -432,16 +432,16 @@ const buildTrafficTooltip = ({ dataPointIndex }: any): string => {
       html += `<span style="flex: 1;">${escapeHtml(model.name)}</span>`
       html += `<span style="margin-left: 12px; font-weight: 500;">${mdp.requestCount}</span>`
       if (hasModelFailure) {
-        html += `<span style="margin-left: 6px; color: #ef4444; font-size: 11px;">(${mdp.failureCount}失败, ${failRate}%)</span>`
+        html += `<span style="margin-left: 6px; color: #ef4444; font-size: 11px;">(${mdp.failureCount} ${t('chart.failed')}, ${failRate}%)</span>`
       }
       html += `</div>`
     })
     // 合计行
     const grandFailureRate = dp.requestCount > 0 ? (dp.failureCount / dp.requestCount * 100).toFixed(1) : '0'
     html += `<div style="border-top: 1px solid rgba(128,128,128,0.3); margin-top: 6px; padding-top: 6px; font-weight: 600;">`
-    html += `<span>合计: ${dp.requestCount} 请求</span>`
+    html += `<span>${t('chart.total')}: ${dp.requestCount} ${t('chart.requestUnit')}</span>`
     if (hasFailure) {
-      html += `<span style="color: #ef4444; margin-left: 8px;">${dp.failureCount} 失败 (${grandFailureRate}%)</span>`
+      html += `<span style="color: #ef4444; margin-left: 8px;">${dp.failureCount} ${t('chart.failed')} (${grandFailureRate}%)</span>`
     }
     html += `</div>`
   } else {
@@ -449,11 +449,11 @@ const buildTrafficTooltip = ({ dataPointIndex }: any): string => {
     const failureRate = dp.requestCount > 0 ? (dp.failureCount / dp.requestCount * 100).toFixed(1) : '0'
     html += `<div style="display: flex; align-items: center; margin: 4px 0;">`
     html += `<span style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6; margin-right: 6px;"></span>`
-    html += `<span style="flex: 1;">总请求</span>`
+    html += `<span style="flex: 1;">${t('chart.totalRequests')}</span>`
     html += `<span style="margin-left: 12px; font-weight: 500;">${dp.requestCount}</span>`
     html += `</div>`
     if (hasFailure) {
-      html += `<div style="color: #ef4444; font-size: 11px; margin-top: 4px;">${dp.failureCount} 失败 (${failureRate}%)</div>`
+      html += `<div style="color: #ef4444; font-size: 11px; margin-top: 4px;">${dp.failureCount} ${t('chart.failed')} (${failureRate}%)</div>`
     }
   }
 
@@ -482,7 +482,7 @@ const chartSeries = computed(() => {
     }
     return [
       {
-        name: '请求',
+        name: t('status.metrics.requests'),
         data: dataPoints.map(dp => ({
           x: new Date(dp.timestamp).getTime(),
           y: dp.requestCount
@@ -492,14 +492,14 @@ const chartSeries = computed(() => {
   } else {
     return [
       {
-        name: '输入 Token',
+        name: t('chart.inputTokens'),
         data: dataPoints.map(dp => ({
           x: new Date(dp.timestamp).getTime(),
           y: dp.inputTokens
         }))
       },
       {
-        name: '输出 Token',
+        name: t('chart.outputTokens'),
         data: dataPoints.map(dp => ({
           x: new Date(dp.timestamp).getTime(),
           y: dp.outputTokens
@@ -545,7 +545,7 @@ const refreshData = async (isAutoRefresh = false) => {
     }
   } catch (error) {
     console.error('Failed to fetch global stats:', error)
-    errorMessage.value = error instanceof Error ? error.message : '获取全局统计数据失败'
+    errorMessage.value = error instanceof Error ? error.message : t('chart.globalStatsLoadFailed')
     showError.value = true
     historyData.value = null
   } finally {
