@@ -7,10 +7,10 @@
         </v-avatar>
         <div class="flex-grow-1">
           <div class="text-h5 font-weight-bold">
-            {{ isEditing ? '编辑渠道' : '添加新渠道' }}
+            {{ isEditing ? t('addChannel.editTitle') : t('addChannel.createTitle') }}
           </div>
           <div class="text-body-2" :class="subtitleClasses">
-            {{ isEditing ? '修改渠道配置信息' : isQuickMode ? '快速批量添加 API 密钥' : '配置API渠道信息和密钥' }}
+            {{ isEditing ? t('addChannel.editSubtitle') : isQuickMode ? t('addChannel.quickSubtitle') : t('addChannel.fullSubtitle') }}
           </div>
         </div>
         <!-- 能力测试按钮（仅在编辑模式显示） -->
@@ -21,12 +21,12 @@
           prepend-icon="mdi-test-tube"
           @click="handleTestCapability"
         >
-          能力测试
+          {{ t('addChannel.testCapability') }}
         </v-btn>
         <!-- 模式切换按钮（仅在添加模式显示） -->
         <v-btn v-if="!isEditing" variant="outlined" size="small" class="mode-toggle-btn" @click="toggleMode">
           <v-icon start size="16">{{ isQuickMode ? 'mdi-form-textbox' : 'mdi-lightning-bolt' }}</v-icon>
-          {{ isQuickMode ? '详细配置' : '快速添加' }}
+          {{ isQuickMode ? t('addChannel.detailedMode') : t('addChannel.quickMode') }}
         </v-btn>
       </v-card-title>
 
@@ -35,8 +35,8 @@
         <div v-if="!isEditing && isQuickMode">
           <v-textarea
             v-model="quickInput"
-            label="输入内容"
-            placeholder="每行输入一个 API Key 或 Base URL&#10;&#10;示例:&#10;sk-xxx-your-api-key&#10;sk-yyy-another-key&#10;https://api.example.com/v1"
+            :label="t('addChannel.quickInputLabel')"
+            :placeholder="t('addChannel.quickInputPlaceholder')"
             variant="outlined"
             rows="10"
             no-resize
@@ -55,19 +55,19 @@
                     {{ detectedBaseUrls.length > 0 ? 'mdi-check-circle' : 'mdi-alert-circle' }}
                   </v-icon>
                   <div class="flex-grow-1">
-                    <div class="text-body-2 font-weight-medium">Base URL</div>
+                    <div class="text-body-2 font-weight-medium">{{ t('addChannel.baseUrl') }}</div>
                     <div v-if="detectedBaseUrls.length === 0" class="text-caption text-error">
-                      请输入一个有效的 URL (https://...)
+                      {{ t('addChannel.enterValidUrl') }}
                     </div>
                     <div v-else class="d-flex flex-column ga-2 mt-1">
                       <div v-for="url in detectedBaseUrls" :key="url" class="base-url-item">
                         <div class="text-caption text-success">{{ url }}</div>
-                        <div class="text-caption text-medium-emphasis">预期请求: {{ getExpectedRequestUrl(url) }}</div>
+                        <div class="text-caption text-medium-emphasis">{{ t('addChannel.expectedRequest') }} {{ getExpectedRequestUrl(url) }}</div>
                       </div>
                     </div>
                   </div>
                   <v-chip v-if="detectedBaseUrls.length > 0" size="x-small" color="success" variant="tonal">
-                    {{ detectedBaseUrls.length }} 个
+                    {{ t('addChannel.count', { count: detectedBaseUrls.length }) }}
                   </v-chip>
                 </div>
 
@@ -77,17 +77,17 @@
                     {{ detectedApiKeys.length > 0 ? 'mdi-check-circle' : 'mdi-alert-circle' }}
                   </v-icon>
                   <div class="flex-grow-1">
-                    <div class="text-body-2 font-weight-medium">API 密钥</div>
+                    <div class="text-body-2 font-weight-medium">{{ t('addChannel.apiKeys') }}</div>
                     <div class="text-caption" :class="detectedApiKeys.length > 0 ? 'text-success' : 'text-error'">
                       {{
                         detectedApiKeys.length > 0
-                          ? `已检测到 ${detectedApiKeys.length} 个密钥`
-                          : '请至少输入一个 API Key'
+                          ? t('addChannel.detectedKeys', { count: detectedApiKeys.length })
+                          : t('addChannel.enterApiKey')
                       }}
                     </div>
                   </div>
                   <v-chip v-if="detectedApiKeys.length > 0" size="x-small" color="success" variant="tonal">
-                    {{ detectedApiKeys.length }} 个
+                    {{ t('addChannel.count', { count: detectedApiKeys.length }) }}
                   </v-chip>
                 </div>
 
@@ -95,19 +95,19 @@
                 <div class="d-flex align-center ga-3">
                   <v-icon color="primary" size="20">mdi-tag</v-icon>
                   <div class="flex-grow-1">
-                    <div class="text-body-2 font-weight-medium">渠道名称</div>
+                    <div class="text-body-2 font-weight-medium">{{ t('addChannel.channelName') }}</div>
                     <div class="text-caption text-primary font-weight-medium">
                       {{ generatedChannelName }}
                     </div>
                   </div>
-                  <v-chip size="x-small" color="primary" variant="tonal"> 自动生成 </v-chip>
+                  <v-chip size="x-small" color="primary" variant="tonal"> {{ t('common.autoGenerated') }} </v-chip>
                 </div>
 
                 <!-- 渠道类型提示 -->
                 <div class="d-flex align-center ga-3">
                   <v-icon color="info" size="20">mdi-information</v-icon>
                   <div class="flex-grow-1">
-                    <div class="text-body-2 font-weight-medium">渠道类型</div>
+                    <div class="text-body-2 font-weight-medium">{{ t('addChannel.channelType') }}</div>
                     <div class="text-caption text-medium-emphasis">
                       {{ props.channelType === 'chat' ? 'OpenAI Chat' : props.channelType === 'gemini' ? 'Gemini' : props.channelType === 'responses' ? 'Responses (Codex)' : 'Claude (Messages)' }} -
                       {{ getDefaultServiceType() }}
@@ -126,8 +126,8 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="form.name"
-                label="渠道名称 *"
-                placeholder="例如：GPT-4 渠道"
+                :label="t('addChannel.nameLabel')"
+                :placeholder="t('addChannel.namePlaceholder')"
                 prepend-inner-icon="mdi-tag"
                 variant="outlined"
                 density="comfortable"
@@ -140,7 +140,7 @@
             <v-col cols="12" md="6">
               <v-select
                 v-model="form.serviceType"
-                label="服务类型 *"
+                :label="t('addChannel.serviceTypeLabel')"
                 :items="serviceTypeOptions"
                 prepend-inner-icon="mdi-cog"
                 variant="outlined"
@@ -155,8 +155,8 @@
             <v-col cols="12">
               <v-textarea
                 v-model="baseUrlsText"
-                label="基础URL *"
-                placeholder="每行一个 URL，支持多个 BaseURL&#10;例如：&#10;https://api.openai.com/v1&#10;https://api2.openai.com/v1"
+                :label="t('addChannel.baseUrlLabel')"
+                :placeholder="t('addChannel.baseUrlPlaceholder')"
                 prepend-inner-icon="mdi-web"
                 variant="outlined"
                 density="comfortable"
@@ -170,7 +170,7 @@
               <!-- 固定高度的提示区域，防止布局跳动；有错误时不显示 -->
               <div v-show="formExpectedRequestUrls.length > 0 && !baseUrlHasError" class="base-url-hint">
                 <div v-for="(item, index) in formExpectedRequestUrls" :key="index" class="expected-request-item">
-                  <span class="text-caption text-medium-emphasis"> 预期请求: {{ item.expectedUrl }} </span>
+                  <span class="text-caption text-medium-emphasis"> {{ t('addChannel.expectedRequest') }} {{ item.expectedUrl }} </span>
                 </div>
               </div>
             </v-col>
@@ -179,8 +179,8 @@
             <v-col cols="12">
               <v-text-field
                 v-model="form.website"
-                label="官网/控制台 (可选)"
-                placeholder="例如：https://platform.openai.com"
+                :label="t('addChannel.websiteLabel')"
+                :placeholder="t('addChannel.websitePlaceholder')"
                 prepend-inner-icon="mdi-open-in-new"
                 variant="outlined"
                 density="comfortable"
@@ -196,20 +196,20 @@
                 <v-card-title class="d-flex align-center justify-space-between pa-4 pb-2">
                   <div class="d-flex align-center ga-2">
                     <v-icon color="primary">mdi-swap-horizontal</v-icon>
-                    <span class="text-body-1 font-weight-bold">模型重定向 (可选)</span>
+                    <span class="text-body-1 font-weight-bold">{{ t('addChannel.modelRedirect') }}</span>
                   </div>
-                  <v-chip size="small" color="secondary" variant="tonal"> 自动转换模型名称 </v-chip>
+                  <v-chip size="small" color="secondary" variant="tonal"> {{ t('addChannel.autoConvertModelNames') }} </v-chip>
                 </v-card-title>
 
                 <v-card-text class="pt-2">
                   <div class="text-body-2 text-medium-emphasis mb-4">
                     {{ modelMappingHint }}
                     <br/>
-                    <span class="text-caption text-primary">💡 点击目标模型输入框会自动获取上游支持的模型列表,每个 API Key 的检测状态会显示在密钥列表中</span>
+                    <span class="text-caption text-primary">💡 {{ t('addChannel.modelHintTip') }}</span>
                   </div>
 
                   <div v-if="showModelMappingPresets" class="d-flex align-center flex-wrap ga-2 mb-4">
-                    <div class="text-caption text-medium-emphasis">一键设置</div>
+                    <div class="text-caption text-medium-emphasis">{{ t('addChannel.oneClickSetup') }}</div>
                     <v-btn
                       size="small"
                       variant="tonal"
@@ -800,6 +800,7 @@ import {
 import { buildExpectedRequestUrls } from '../utils/expectedRequestUrls'
 import { supportsAdvancedChannelOptions } from '../utils/channelAdvancedOptions'
 import { buildChannelPayload } from '../utils/channelPayload'
+import { useI18n } from '../i18n'
 
 interface Props {
   show: boolean
@@ -816,6 +817,7 @@ const emit = defineEmits<{
   save: [channel: Omit<Channel, 'index' | 'latency' | 'status'>, options?: { isQuickAdd?: boolean }]
   testCapability: [channelId: number]
 }>()
+const { t } = useI18n()
 
 // 主题
 const theme = useTheme()
