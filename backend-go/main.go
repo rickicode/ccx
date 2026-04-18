@@ -30,6 +30,53 @@ import (
 //go:embed all:frontend/dist
 var frontendFS embed.FS
 
+type startupMessage struct {
+	level string
+	text  string
+}
+
+func buildStartupMessages(envCfg *config.EnvConfig) []startupMessage {
+	messages := []startupMessage{
+		{level: "Startup", text: "Server proxy API CCX telah dimulai"},
+		{level: "Info", text: fmt.Sprintf("Versi: %s", Version)},
+	}
+
+	if BuildTime != "unknown" {
+		messages = append(messages, startupMessage{level: "Info", text: fmt.Sprintf("Waktu build: %s", BuildTime)})
+	}
+	if GitCommit != "unknown" {
+		messages = append(messages, startupMessage{level: "Info", text: fmt.Sprintf("Git commit: %s", GitCommit)})
+	}
+
+	messages = append(messages,
+		startupMessage{level: "Info", text: fmt.Sprintf("Antarmuka admin: http://localhost:%d", envCfg.Port)},
+		startupMessage{level: "Info", text: fmt.Sprintf("Alamat API: http://localhost:%d/v1", envCfg.Port)},
+		startupMessage{level: "Info", text: "Claude Messages: POST /v1/messages"},
+		startupMessage{level: "Info", text: "Codex Responses: POST /v1/responses"},
+		startupMessage{level: "Info", text: "Gemini API: POST /v1beta/models/{model}:generateContent"},
+		startupMessage{level: "Info", text: "Gemini API: POST /v1beta/models/{model}:streamGenerateContent"},
+		startupMessage{level: "Info", text: "Chat Completions: POST /v1/chat/completions"},
+		startupMessage{level: "Info", text: "Pemeriksaan kesehatan: GET /health"},
+		startupMessage{level: "Info", text: fmt.Sprintf("Lingkungan: %s", envCfg.Env)},
+	)
+
+	if envCfg.ProxyAccessKey == "your-proxy-access-key" {
+		messages = append(messages, startupMessage{
+			level: "Warn",
+			text:  "Kunci akses: your-proxy-access-key (nilai default, disarankan ubah melalui file .env)",
+		})
+	}
+
+	if envCfg.AdminAccessKey != "" {
+		messages = append(messages, startupMessage{
+			level: "Info",
+			text:  "Kunci admin: ADMIN_ACCESS_KEY terpisah telah dikonfigurasi",
+		})
+	}
+
+	return messages
+}
+
 func main() {
 	// 加载环境变量
 	if err := godotenv.Load(); err != nil {
@@ -301,34 +348,13 @@ func main() {
 
 	// 启动服务器
 	addr := fmt.Sprintf(":%d", envCfg.Port)
-	fmt.Printf("\n[Server-Startup] CCX API代理服务器已启动\n")
-	fmt.Printf("[Server-Info] 版本: %s\n", Version)
-	if BuildTime != "unknown" {
-		fmt.Printf("[Server-Info] 构建时间: %s\n", BuildTime)
+	fmt.Printf("\n")
+	for _, message := range buildStartupMessages(envCfg) {
+		fmt.Printf("[Server-%s] %s\n", message.level, message.text)
 	}
-	if GitCommit != "unknown" {
-		fmt.Printf("[Server-Info] Git提交: %s\n", GitCommit)
-	}
-	fmt.Printf("[Server-Info] 管理界面: http://localhost:%d\n", envCfg.Port)
-	fmt.Printf("[Server-Info] API 地址: http://localhost:%d/v1\n", envCfg.Port)
-	fmt.Printf("[Server-Info] Claude Messages: POST /v1/messages\n")
-	fmt.Printf("[Server-Info] Codex Responses: POST /v1/responses\n")
-	fmt.Printf("[Server-Info] Gemini API: POST /v1beta/models/{model}:generateContent\n")
-	fmt.Printf("[Server-Info] Gemini API: POST /v1beta/models/{model}:streamGenerateContent\n")
-	fmt.Printf("[Server-Info] Chat Completions: POST /v1/chat/completions\n")
-	fmt.Printf("[Server-Info] 健康检查: GET /health\n")
-	fmt.Printf("[Server-Info] 环境: %s\n", envCfg.Env)
 	// 生产环境检查：必须设置有效的访问密钥
 	if envCfg.IsProduction() && envCfg.ProxyAccessKey == "your-proxy-access-key" {
 		log.Fatal("[Server-Fatal] 生产环境必须设置 PROXY_ACCESS_KEY，禁止使用默认值")
-	}
-	// 检查是否使用默认密码，给予提示
-	if envCfg.ProxyAccessKey == "your-proxy-access-key" {
-		fmt.Printf("[Server-Warn] 访问密钥: your-proxy-access-key (默认值，建议通过 .env 文件修改)\n")
-	}
-	// 提示管理密钥配置状态
-	if envCfg.AdminAccessKey != "" {
-		fmt.Printf("[Server-Info] 管理密钥: 已配置独立 ADMIN_ACCESS_KEY\n")
 	}
 	fmt.Printf("\n")
 
